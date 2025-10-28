@@ -148,7 +148,7 @@
         let html = '<p>Найдено билетов: ' + found.length + '</p>';
         html += '<table><thead><tr><th>Номер билета</th><th>Дата</th></tr></thead><tbody>';
         // Сортируем по номеру билета
-        const sorted = found.slice().sort((a, b) => a.number.localeCompare(b.number));
+        const sorted = found.slice().sort((a, b) => parseInt(a.number, 10) - parseInt(b.number, 10));
         for (const row of sorted) {
             html += '<tr><td>' + row.number + '</td><td>' + row.date + '</td></tr>';
         }
