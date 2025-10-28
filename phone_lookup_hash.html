@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверка лотерейных билетов (хэш)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: #f8f9fb;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 60px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #222;
+        }
+        p.instructions {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #666;
+        }
+        .input-group {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .input-group input {
+            flex: 1;
+            padding: 12px 14px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px 0 0 4px;
+            outline: none;
+        }
+        .input-group button {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+        .input-group button:hover {
+            background-color: #0056b3;
+        }
+        #status {
+            text-align: center;
+            margin-bottom: 10px;
+            font-style: italic;
+            color: #888;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            text-align: left;
+            font-size: 14px;
+        }
+        th {
+            background-color: #f1f3f5;
+            font-weight: 600;
+        }
+        @media (max-width: 600px) {
+            .input-group input {
+                font-size: 14px;
+            }
+            .input-group button {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Проверка лотерейных билетов</h1>
+        <p class="instructions">Введите свой номер телефона <strong>без кода страны</strong>. Например: <span style="white-space: nowrap">(960)&nbsp;XXX&nbsp;XX&nbsp;XX</span>.</p>
+        <div class="input-group">
+            <input type="text" id="phoneInput" placeholder="Введите номер" onkeypress="if(event.key === 'Enter') search()">
+            <button onclick="search()">Искать</button>
+        </div>
+        <div id="status">Загрузка базы…</div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+    let ticketsByHash = {};
+    // Загружаем базу. При размещении на сервере браузер сможет получить JSON по HTTPS.
+    fetch('tickets_by_hash.json')
+        .then(response => response.json())
+        .then(data => {
+            ticketsByHash = data;
+            document.getElementById('status').innerText = 'База загружена. Введите номер.';
+        })
+        .catch(err => {
+            console.error('Ошибка загрузки базы:', err);
+            document.getElementById('status').innerText = 'Не удалось загрузить базу. Пожалуйста, разместите файлы на сервере.';
+        });
+
+    // Удаляем все нецифровые символы
+    function normalize(input) {
+        return input.replace(/\D/g, '');
+    }
+
+    // Вычисление SHA-256. Возвращает промис с хешем в виде строки hex.
+    async function sha256(str) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(str);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function search() {
+        const input = document.getElementById('phoneInput').value;
+        const digits = normalize(input);
+        const resultsContainer = document.getElementById('results');
+        resultsContainer.innerHTML = '';
+        if (!digits) {
+            alert('Пожалуйста, введите номер.');
+            return;
+        }
+        // Вычисляем хеш введённого номера
+        const hash = await sha256(digits);
+        const found = ticketsByHash[hash] || [];
+        if (found.length === 0) {
+            resultsContainer.innerHTML = '<p>Билеты для этого номера не найдены.</p>';
+            return;
+        }
+        let html = '<p>Найдено билетов: ' + found.length + '</p>';
+        html += '<table><thead><tr><th>Номер билета</th><th>Дата</th></tr></thead><tbody>';
+        // Сортируем по номеру билета
+        const sorted = found.slice().sort((a, b) => a.number.localeCompare(b.number));
+        for (const row of sorted) {
+            html += '<tr><td>' + row.number + '</td><td>' + row.date + '</td></tr>';
+        }
+        html += '</tbody></table>';
+        resultsContainer.innerHTML = html;
+    }
+    </script>
+</body>
+</html>
