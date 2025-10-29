@@ -117,7 +117,13 @@
 
     // Удаляем все нецифровые символы
     function normalize(input) {
-        return input.replace(/\D/g, '');
+        // Оставляем только цифры
+        const digits = input.replace(/\D/g, "");
+        // Если введено больше 10 цифр (например, с кодом страны 8 или +7), берём последние 10 цифр
+        if (digits.length > 10) {
+            return digits.slice(-10);
+        }
+        return digits;
     }
 
     // Вычисление SHA-256. Возвращает промис с хешем в виде строки hex.
