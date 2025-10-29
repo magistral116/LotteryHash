@@ -92,9 +92,11 @@
 <body>
     <div class="container">
         <h1>Проверка лотерейных билетов</h1>
-        <p class="instructions">Введите свой номер телефона <strong>без кода страны</strong>. Например: <span style="white-space: nowrap">(960)&nbsp;XXX&nbsp;XX&nbsp;XX</span>.</p>
+        <!-- Инструкции обновлены: пользователи могут вводить номер с кодом +7 или 8, сервис возьмёт последние 10 цифр -->
+        <p class="instructions">Введите свой номер телефона (можно указывать с кодом <strong>+7</strong> или <strong>8</strong> — сервис возьмёт последние&nbsp;10&nbsp;цифр). Например: <span style="white-space: nowrap">960&nbsp;XXX&nbsp;XX&nbsp;XX</span> или <span style="white-space: nowrap">+7&nbsp;960&nbsp;XXX&nbsp;XX&nbsp;XX</span>.</p>
         <div class="input-group">
-            <input type="text" id="phoneInput" placeholder="Введите номер" onkeypress="if(event.key === 'Enter') search()">
+            <!-- Обновили placeholder, чтобы показать, что можно вводить номер с кодом 8 или +7 -->
+            <input type="text" id="phoneInput" placeholder="9601234567 или +79601234567" onkeypress="if(event.key === 'Enter') search()">
             <button onclick="search()">Искать</button>
         </div>
         <div id="status">Загрузка базы…</div>
